@@ -1,0 +1,93 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package edu.wpi.first.wpilibj.templates;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.buttons.Button;
+
+/**
+ *
+ * @author Team3265
+ */
+public class UserMap {
+    
+    private static double MAX_SPEED_MULTIPLIER = 1;
+    private static double MIN_SPEED_MULTIPLIER = 0.25;
+    
+    public static final int DRIVE_JOYSTICK_PORT = 1;
+    public static final int LAUNCH_BUTTON = 1;
+    public static final int PICKUP_BUTTON = 3;
+    public static final int LOWER_ARM_BUTTON = 2;
+    public static final int COMPRESSOR_BUTTON = 4;
+    private static boolean shouldCompressorRun = false;
+    private static boolean previousCompressorButtonState = false;
+    private static boolean armUp = true;
+    private static boolean shooterUp = true;
+    private static boolean compressorAlwaysOn;
+    
+    public static Joystick driveJoystick;
+    public static Button pickUpArm;
+    public static Button lowerArm;
+
+    
+    
+    public static void init() {
+        driveJoystick = new Joystick(DRIVE_JOYSTICK_PORT);
+        
+    }
+    
+    public static double getLeftRightValue() {
+        return driveJoystick.getX() * -1;
+    }
+    
+    public static double getForwardBackValue() {
+        return driveJoystick.getY() * -1;
+    }
+    //not needed
+    public static double getDriveMultiplier() {
+        double power = driveJoystick.getZ();
+        power = power + 1; //shift from -1 to 1 to 0 to 2
+        power = power / 2; //shift to 0 to 1
+        power = power * (MAX_SPEED_MULTIPLIER - MIN_SPEED_MULTIPLIER); //adjust to range needed
+        power += MIN_SPEED_MULTIPLIER; //add minimum to shift to minimum at lowest value
+        power = 1 - power;
+        return power;
+    }
+    
+    public static boolean runCompressor() {
+        compressorAlwaysOn = DriverStation.getInstance().getDigitalIn(1); //new
+        if( (driveJoystick.getRawButton(COMPRESSOR_BUTTON) && !previousCompressorButtonState) ) {// || compressorAlwaysOn) { //OR added
+            shouldCompressorRun = !shouldCompressorRun;
+        }
+        previousCompressorButtonState = driveJoystick.getRawButton(COMPRESSOR_BUTTON);
+        return shouldCompressorRun;
+    }
+    
+    public static boolean getLaunchState() {
+        return driveJoystick.getRawButton(LAUNCH_BUTTON);
+    }
+    public static boolean getPickupButtonState() {
+        return driveJoystick.getRawButton(PICKUP_BUTTON);
+    }
+    public static boolean getLowerArmButtonState() {
+        return driveJoystick.getRawButton(LOWER_ARM_BUTTON);
+    }
+    public static boolean getPickupState() {
+        return armUp;
+    }
+    public static void setPickupState(boolean val){
+        armUp = val;
+    }
+    public static void setShooterState(boolean val){
+        shooterUp = val;
+    }
+    public static boolean getShooterState() {
+        return shooterUp;
+    }
+
+        
+}
