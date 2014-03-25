@@ -1,0 +1,130 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package edu.wpi.first.wpilibj.templates;
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.AnalogChannel;
+import edu.wpi.first.wpilibj.DigitalModule;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Gyro;
+import edu.wpi.first.wpilibj.I2C;
+
+
+
+/**
+ *
+ * @author Team3265
+ */
+public class RobotParts {
+    public static final int TALON_RIGHT_BACK = 1;       //drive
+    public static final int TALON_RIGHT_FRONT = 2;      //drive
+    public static final int TALON_LEFT_FRONT = 3;       //drive 
+    public static final int TALON_LEFT_BACK = 4;        //drive
+    public static final int TALON_LEFT_ARM = 5;         //lifter
+    public static final int TALON_RIGHT_ARM = 6;        //lifter
+    public static final int COMPRESSOR_CONTROL = 1;     //pnuematics pressure
+    public static final int COMPRESSOR_RELAY = 1;       //pnuematics relay
+    public static final int LAUNCH_EXTENDER_PORT = 2;   
+    public static final int LAUNCH_RETRACTER_PORT = 1;
+    public static final int LAUNCH_EXTENDER2_PORT = 4;  
+    public static final int LAUNCH_RETRACTER2_PORT = 3;
+    public static final int LIMIT_UP = 4;
+    public static final int LIMIT_DOWN = 3;
+    public static final int SONAR_CHANNEL = 2;         //sonar
+    
+    //UNTESTED
+    public static final int GYRO_CHANNEL = 1;
+    public static I2C i2c;
+    public static byte[] toSend = new byte[1];
+    public static final int SCORE = 3, BLUE = 2, RED = 1 , DEFEND = 4, DEFAULT_R = 5, DEFAULT_B = 6;
+    public static DriverStation ds;
+    public static DriverStation.Alliance color;
+    //unused CONSTANTS
+    
+    // sonar distance calculation values
+    private static double min_voltage = .5;
+    //private static double voltage_range = 5.0 - min_voltage;
+    //private static double min_distance = 3.0;
+    //private static double distance_range = 60.0 - min_distance;
+    
+    
+    public static RobotDrive robotDrive;
+    public static Talon talonArmLeft,talonArmRight;
+    public static Compressor compressor;
+    public static Solenoid launchSolenoidExtend, launchSolenoidExtend2;
+    public static Solenoid launchSolenoidRetract, launchSolenoidRetract2;
+    public static DigitalInput limitSwitchUp, limitSwitchDown;   
+    public static AnalogChannel sonar;
+    public static Gyro gyro; //new
+    public static double Kp = 0.03;
+
+    //Unused Objects
+    //public static Encoder frontLeft;
+    //public static Encoder frontRight;
+    
+    public static void init() {
+        robotDrive = new RobotDrive(TALON_LEFT_FRONT, TALON_LEFT_BACK, TALON_RIGHT_FRONT, TALON_RIGHT_BACK);
+        compressor = new Compressor(COMPRESSOR_CONTROL, COMPRESSOR_RELAY);
+        launchSolenoidExtend = new Solenoid(LAUNCH_EXTENDER_PORT);
+        launchSolenoidRetract = new Solenoid(LAUNCH_RETRACTER_PORT);
+        launchSolenoidExtend2 = new Solenoid(LAUNCH_EXTENDER2_PORT);
+        launchSolenoidRetract2 = new Solenoid(LAUNCH_RETRACTER2_PORT);
+        talonArmRight = new Talon (TALON_RIGHT_ARM);
+        talonArmLeft = new Talon (TALON_LEFT_ARM);
+        limitSwitchUp = new DigitalInput (LIMIT_UP);
+        limitSwitchDown = new DigitalInput (LIMIT_DOWN);
+        sonar = new AnalogChannel (SONAR_CHANNEL);
+        gyro = new Gyro(GYRO_CHANNEL);
+        color = DriverStation.getInstance().getAlliance();
+        ds = DriverStation.getInstance();
+          
+        DigitalModule module = DigitalModule.getInstance(1);
+        i2c = module.getI2C(8);
+        i2c.setCompatabilityMode(true);
+    }
+    
+    static int count = 0;
+    public static void setLEDState(){
+            
+            if( color == DriverStation.Alliance.kRed  && getDistance() < 70){
+                toSend[0] = RED;
+            }
+            else if ( color == DriverStation.Alliance.kBlue  && getDistance() < 70) {
+                toSend[0] = BLUE;  
+            }
+            else if (UserMap.driveJoystick.getRawButton(5)){ //Rainbow
+                toSend[0] = SCORE; 
+            }
+            else if (UserMap.driveJoystick.getRawButton(6)){ //GREEN
+                toSend[0] = DEFEND; 
+            }
+            else if (color == DriverStation.Alliance.kRed){ //Red CHASE
+                toSend[0] = DEFAULT_R;    
+            }
+            else{ //blue chase
+                toSend[0] = DEFAULT_B;
+            }
+            i2c.transaction(toSend, 1, null, 0);
+    }
+    
+    
+    public static double getDistance()
+    {
+       double range = sonar.getVoltage();
+       if (range < min_voltage){
+            return -2.0;
+        }
+      
+        double vi = 5.0 / 512;
+        double distance = range /vi;
+        return distance;
+    }
+    
+}
